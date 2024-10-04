@@ -35,11 +35,11 @@ class MINE(torch.nn.Module):
         
         with torch.no_grad():
             for index, batch in enumerate(dataloader):
-                x, y, z = batch
+                x, y = batch
                 batch_size = x.shape[0]
             
                 T_joined   = self(x.to(device), y.to(device))
-                T_marginal = self(z.to(device), y.to(device), marginalize=marginalize)
+                T_marginal = self(x.to(device), y.to(device), marginalize=marginalize)
                 
                 sum_loss += loss(T_joined, T_marginal).detach().cpu().item() * batch_size
                 total_elements += batch_size
