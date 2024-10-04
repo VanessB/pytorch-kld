@@ -4,7 +4,7 @@ import torch
 from .utils import BaseVariationalBoundLoss
 
 
-class InfoNCE(BaseVariationalBoundLoss):
+class InfoNCELoss(BaseVariationalBoundLoss):
     """
     Noise-Contrastive Estimation variational lower bound for
     the mutual information.
@@ -20,18 +20,19 @@ class InfoNCE(BaseVariationalBoundLoss):
 
         self.is_lower_bound = True
 
-    def forward(self, T_product: torch.tensor) -> torch.tensor:
+    def forward(self, T_joined: torch.tensor, T_product: torch.tensor) -> torch.tensor:
         """
         Forward pass.
         
         Parameters
         ----------
+        T_joined : torch.tensor
+            Critic network value on all samples from the batch.
         T_product : torch.tensor
-            Critic network value on all pairs of samples from the batch.
+            Critic network value on all possible pairs of samples from the batch.
         """
 
-        batch_size = math.isqrt(T_product.shape[0])
+        batch_size = T_joined.shape[0]
         T_product = T_product.view((batch_size, batch_size))
 
-        log_softmax = torch.nn.functional.log_softmax(T_product, dim=0)
-        
+        return torch.mean(torch.logsumexp(T_product - T_joined, dim=-1)) - math.log(batch_size)
