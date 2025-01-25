@@ -1,5 +1,7 @@
 import torch
 
+from collections.abc import Callable
+
 
 class MINE(torch.nn.Module):
     """
@@ -9,8 +11,14 @@ class MINE(torch.nn.Module):
     def __init__(self) -> None:
         super().__init__()
         
-    def get_mutual_information(self, dataloader, loss: callable, device,
-                               marginalize: bool=True) -> float:
+    def get_mutual_information(
+        self,
+        dataloader,
+        loss: Callable[[torch.Tensor, torch.Tensor], torch.Tensor],
+        device,
+        marginalize: bool="permute",
+        transform=None
+    ) -> float:
         """
         Mutual information estimation.
         
@@ -22,8 +30,9 @@ class MINE(torch.nn.Module):
             Mutual information neural estimation loss.
         device
             Comoutation device.
-        permute : bool, optional
-            Permute every batch to get product of marginal distributions.
+        marginalize : str, optional
+            Method of marginalizing the joint distribution.
+            Is either "permute" or "product".
         """
         
         # Disable training.
@@ -37,6 +46,11 @@ class MINE(torch.nn.Module):
             for index, batch in enumerate(dataloader):
                 x, y = batch
                 batch_size = x.shape[0]
+
+                x, y = x.to(device), y.to(device)
+
+                if not (transform is None):
+                    x, y = transform(x, y)
             
                 T_joined   = self(x.to(device), y.to(device))
                 T_marginal = self(x.to(device), y.to(device), marginalize=marginalize)
@@ -51,7 +65,7 @@ class MINE(torch.nn.Module):
         
         return mutual_information
 
-    def forward(self, x: torch.tensor, y: torch.tensor, marginalize: bool=False) -> torch.tensor:
+    def forward(self, x: torch.Tensor, y: torch.Tensor, marginalize: bool=False) -> torch.Tensor:
         if isinstance(marginalize, bool):
             if marginalize:
                 marginalize = "permute"

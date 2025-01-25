@@ -9,7 +9,7 @@ def save_results(history, parameters, experiment_path, average_epochs: int=10):
     history = pandas.DataFrame(history)
     history.to_csv(experiment_path / "history.csv", index=False)
 
-    parameters["estimated_mutual_information"] = history["mutual_information"][-average_epochs:].mean()
-    parameters["estimated_mutual_information_std"] = history["mutual_information"][-average_epochs:].std() / math.sqrt(average_epochs)
+    parameters["estimated_mutual_information"] = history["test_mutual_information"][-average_epochs:].mean()
+    parameters["estimated_mutual_information_std"] = history["test_mutual_information"][-average_epochs:].std() / math.sqrt(average_epochs)
     with open(experiment_path / "parameters.json", 'w') as file:
         json.dump(parameters, file, indent=4)
