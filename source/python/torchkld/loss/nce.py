@@ -34,5 +34,6 @@ class InfoNCELoss(BaseVariationalBoundLoss):
 
         batch_size = T_joined.shape[0]
         T_product = T_product.view((batch_size, batch_size))
-
+        T_joined = torch.diag(T_product)
+        
         return torch.mean(torch.logsumexp(T_product - T_joined, dim=-1)) - math.log(batch_size)
