@@ -1,6 +1,7 @@
 import torch
 
 from collections.abc import Callable
+from typing import Any
 
 
 class MINE(torch.nn.Module):
@@ -65,7 +66,12 @@ class MINE(torch.nn.Module):
         
         return mutual_information
 
-    def forward(self, x: torch.Tensor, y: torch.Tensor, marginalize: bool=False) -> torch.Tensor:
+    def _marginalize(
+        self,
+        x: torch.Tensor,
+        y: torch.Tensor,
+        marginalize: (bool | str)=False
+    ) -> torch.Tensor:
         if isinstance(marginalize, bool):
             if marginalize:
                 marginalize = "permute"
@@ -87,3 +93,17 @@ class MINE(torch.nn.Module):
             x = x.repeat(x_repeat_shape)
 
         return x, y
+
+    #@staticmethod
+    def marginalizable(
+        function: Callable[[Any, torch.Tensor, torch.Tensor], torch.Tensor]
+    ) -> Callable[[Any, torch.Tensor, torch.Tensor, (bool | str)], torch.Tensor]:
+        def wrapped(self, x, y, marginalize=False):
+            x, y = self._marginalize(x, y, marginalize)
+            return function(self, x, y)
+
+        return wrapped
+
+    @marginalizable
+    def forward(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+        raise NotImplementedError

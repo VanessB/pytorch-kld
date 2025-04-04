@@ -13,10 +13,9 @@ class BasicDenseT(torchkld.mutual_information.MINE):
         
         self.activation = torch.nn.LeakyReLU()
         
-        
-    def forward(self, x: torch.tensor, y: torch.tensor, marginalize: bool=False) -> torch.tensor:
-        x, y = super().forward(x, y, marginalize)
-        
+
+    @torchkld.mutual_information.MINE.marginalizable
+    def forward(self, x: torch.tensor, y: torch.tensor) -> torch.tensor:       
         layer = torch.cat((x, y), dim=1)
         
         # First layer.
