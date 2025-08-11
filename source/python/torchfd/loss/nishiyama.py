@@ -12,15 +12,16 @@ class NishiyamaLoss(BaseVariationalBoundLoss):
     .. [1] Nishiyama, T. "A new lower bound for kullback-leibler divergence
            based on hammersley-chapman-robbins bound". arXiv:1907.00288
     """
+
+    is_lower_bound = True
     
     def __init__(self, biased=True):
         super().__init__()
 
         if not biased:
             raise NotImplementedError("Unbiased loss is not implemented yet")
+
         self.biased = biased
-        
-        self.is_lower_bound = True
 
     def forward(self, T_p: torch.tensor, T_q: torch.tensor) -> torch.tensor:
         """

@@ -15,11 +15,11 @@ class NWJLoss(BaseVariationalBoundLoss):
            minimization". IEEE Transactions on Information Theory, 56
            (11):5847–5861, 2010.
     """
+
+    is_lower_bound = True
     
     def __init__(self):
         super().__init__()
-
-        self.is_lower_bound = True
 
     def forward(self, T_p: torch.tensor, T_q: torch.tensor) -> torch.tensor:
         """

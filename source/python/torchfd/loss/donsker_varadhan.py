@@ -15,6 +15,8 @@ class DonskerVaradhanLoss(BaseVariationalBoundLoss):
            markov process expectations for large time".
            Communications on Pure and Applied Mathematics 36(2):183?212, 1983
     """
+
+    is_lower_bound = True
     
     class DVLossSecondTerm(torch.autograd.Function):
         """
@@ -25,7 +27,7 @@ class DonskerVaradhanLoss(BaseVariationalBoundLoss):
         EPS = 1e-6
 
         @staticmethod
-        def forward(ctx, T_q: torch.tensor, moving_average: float) -> torch.tensor:
+        def forward(context, T_q: torch.tensor, moving_average: float) -> torch.tensor:
             """
             Forward pass.
             
@@ -42,12 +44,12 @@ class DonskerVaradhanLoss(BaseVariationalBoundLoss):
             
             # Needed for the gradient computation.
             # moving_average is not required for the forward pass.
-            ctx.save_for_backward(T_q, logmeanexp_T_q.detach() if moving_average is None else moving_average)
+            context.save_for_backward(T_q, logmeanexp_T_q.detach() if moving_average is None else moving_average)
             
             return logmeanexp_T_q
     
         @staticmethod
-        def backward(ctx, grad_output: torch.tensor) -> torch.tensor:
+        def backward(context, grad_output: torch.tensor) -> torch.tensor:
             """
             Backward pass.
             
@@ -57,21 +59,36 @@ class DonskerVaradhanLoss(BaseVariationalBoundLoss):
                 Output value gradient.
             """
     
-            T_q, moving_average = ctx.saved_tensors
+            T_q, moving_average = context.saved_tensors
             grad = grad_output * T_q.exp().detach() / (moving_average * T_q.shape[0] + DonskerVaradhanLoss.DVLossSecondTerm.EPS)
             
             return grad, None
 
-    def __init__(self, biased: bool=False, ema_multiplier: float=1.0e-2):
+    def __init__(
+        self,
+        biased: bool=False,
+        ema_multiplier: float=1.0e-2,
+    ):
+        """
+        Create an instance of `DonskerVaradhanLoss` class.
+
+        Parameters
+        ----------
+        biased : bool, optional
+            Do not use exponential moving average estimate of the
+            partition function. Default: False.
+        ema_multiplier : float, optional
+            Exponential moving average multiplier. Default: 0.01.
+        """
+        
         super().__init__(ema_multiplier)
 
         if not isinstance(biased, bool):
             raise TypeError("Parameter `biased' has to be boolean")
 
         self.biased = biased
+        
         self.ema_meanexp_T_q = None
-
-        self.is_lower_bound = True
 
     def forward(self, T_p: torch.tensor, T_q: torch.tensor) -> torch.tensor:
         """
