@@ -44,7 +44,7 @@ class DonskerVaradhanLoss(BaseVariationalBoundLoss):
             
             # Needed for the gradient computation.
             # moving_average is not required for the forward pass.
-            context.save_for_backward(T_q, logmeanexp_T_q.detach() if moving_average is None else moving_average)
+            context.save_for_backward(T_q, logmeanexp_T_q.exp().detach() if moving_average is None else moving_average)
             
             return logmeanexp_T_q
     
